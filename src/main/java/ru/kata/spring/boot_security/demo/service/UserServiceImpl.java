@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Set;
 
 @Service
-@Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -46,15 +45,15 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    @Transactional
     @Override
+    @Transactional
     public void saveUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
     }
 
-    @Transactional
     @Override
+    @Transactional
     public void updateUser(User user) {
 
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
@@ -68,15 +67,15 @@ public class UserServiceImpl implements UserService {
         }
         userRepository.save(user);
     }
-    @Transactional
     @Override
+    @Transactional
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
 
 
-    @Transactional
     @Override
+    @Transactional
     public void createUser(String username, String password, String name,
                            Integer age, String email, Set<Long> roleIds) {
 
@@ -100,8 +99,8 @@ public class UserServiceImpl implements UserService {
 
         saveUser(user);
     }
-    @Transactional
     @Override
+    @Transactional
     public void updateUser(Long id, String username, String password,
                            String name, Integer age, String email, Set<Long> roleIds) {
 
