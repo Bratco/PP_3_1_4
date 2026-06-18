@@ -201,7 +201,7 @@
         new bootstrap.Modal(document.getElementById('userModal')).show();
     }
 
-    // ИСПРАВЛЕННАЯ ФУНКЦИЯ SAVEUSER
+    // Функция сохранения с очисткой оверлея
     async function saveUser() {
         const id = document.getElementById('userId').value;
         const username = document.getElementById('username').value.trim();
@@ -221,15 +221,13 @@
         try {
             const response = await fetchWithCsrf(url, { method, body: JSON.stringify(payload) });
             if (response.ok) {
-                // Закрываем модалку
                 const modalElement = document.getElementById('userModal');
                 const modal = bootstrap.Modal.getInstance(modalElement);
                 if (modal) modal.hide();
-                // Принудительно удаляем оверлей (на случай, если остался)
+                // Принудительная очистка (на случай, если обработчик hidden.bs.modal не сработал)
                 document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
                 document.body.classList.remove('modal-open');
                 document.body.style.overflow = '';
-                // Обновляем таблицу
                 await loadUsers();
             } else {
                 const errorText = await response.text();
@@ -238,7 +236,6 @@
         } catch (error) {
             console.error('Save error:', error);
             alert('Network error while saving user');
-            // Убираем оверлей при ошибке, если он вдруг появился
             document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
             document.body.classList.remove('modal-open');
             document.body.style.overflow = '';
@@ -253,6 +250,13 @@
             else alert('Delete failed: ' + await response.text());
         } catch (error) { console.error(error); alert('Network error while deleting user'); }
     }
+
+    // Обработчик для удаления оверлея при любом закрытии модалки
+    document.getElementById('userModal').addEventListener('hidden.bs.modal', function () {
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+    });
 
     window.onload = async () => {
         await loadRoles();
