@@ -3,12 +3,15 @@ package ru.kata.spring.boot_security.demo.controller.rest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.kata.spring.boot_security.demo.dto.UserRequestDto;
+import ru.kata.spring.boot_security.demo.dto.UserResponseDto;
 import ru.kata.spring.boot_security.demo.entity.User;
 import ru.kata.spring.boot_security.demo.service.UserService;
 import ru.kata.spring.boot_security.demo.service.RoleService;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
@@ -23,44 +26,47 @@ public class UserRestController {
     }
 
     @GetMapping
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
+    public List<UserResponseDto> getAllUsers() {
+        return userService.getAllUsers().stream()
+                .map(this::convertToResponseDto)
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public User getUserById(@PathVariable Long id) {
-        return userService.getUserById(id);
+    public UserResponseDto getUserById(@PathVariable Long id) {
+        User user = userService.getUserById(id);
+        return convertToResponseDto(user);
     }
 
     @PostMapping
-    public ResponseEntity<?> createUser(@RequestBody UserDto userDto) {
-        if (userService.isUsernameExists(userDto.getUsername())) {
+    public ResponseEntity<?> createUser(@RequestBody UserRequestDto dto) {
+        if (userService.isUsernameExists(dto.getUsername())) {
             return ResponseEntity.badRequest().body("Username already exists");
         }
         userService.createUser(
-                userDto.getUsername(),
-                userDto.getPassword(),
-                userDto.getName(),
-                userDto.getAge(),
-                userDto.getEmail(),
-                userDto.getRoleIds()
+                dto.getUsername(),
+                dto.getPassword(),
+                dto.getName(),
+                dto.getAge(),
+                dto.getEmail(),
+                dto.getRoleIds()
         );
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
-        if (userService.isUsernameExistsForOtherUser(id, userDto.getUsername())) {
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserRequestDto dto) {
+        if (userService.isUsernameExistsForOtherUser(id, dto.getUsername())) {
             return ResponseEntity.badRequest().body("Username already exists");
         }
         userService.updateUser(
                 id,
-                userDto.getUsername(),
-                userDto.getPassword(),
-                userDto.getName(),
-                userDto.getAge(),
-                userDto.getEmail(),
-                userDto.getRoleIds()
+                dto.getUsername(),
+                dto.getPassword(),
+                dto.getName(),
+                dto.getAge(),
+                dto.getEmail(),
+                dto.getRoleIds()
         );
         return ResponseEntity.ok().build();
     }
@@ -71,25 +77,15 @@ public class UserRestController {
         return ResponseEntity.noContent().build();
     }
 
-    static class UserDto {
-        private String username;
-        private String password;
-        private String name;
-        private Integer age;
-        private String email;
-        private Set<Long> roleIds;
-
-        public String getUsername() { return username; }
-        public void setUsername(String username) { this.username = username; }
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-        public Integer getAge() { return age; }
-        public void setAge(Integer age) { this.age = age; }
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-        public Set<Long> getRoleIds() { return roleIds; }
-        public void setRoleIds(Set<Long> roleIds) { this.roleIds = roleIds; }
+    private UserResponseDto convertToResponseDto(User user) {
+        UserResponseDto dto = new UserResponseDto();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setName(user.getName());
+        dto.setAge(user.getAge());
+        dto.setEmail(user.getEmail());
+        dto.setRoles(user.getRoles());
+        return dto;
     }
+
 }
